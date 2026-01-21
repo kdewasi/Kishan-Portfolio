@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 255 255 255;
+    --surface: 249 250 251;
+    --primary: 37 99 235;
+    --primary-foreground: 255 255 255;
+    --secondary: 124 58 237;
+    --secondary-foreground: 255 255 255;
+    --text-primary: 10 10 10;
+    --text-secondary: 82 82 82;
+    --border: 229 231 235;
+  }
+
+  .dark {
+    --background: 10 10 10;
+    --surface: 26 26 26;
+    --primary: 59 130 246;
+    --primary-foreground: 255 255 255;
+    --secondary: 139 92 246;
+    --secondary-foreground: 255 255 255;
+    --text-primary: 255 255 255;
+    --text-secondary: 163 163 163;
+    --border: 38 38 38;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-text-primary antialiased transition-colors duration-300;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--border));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--text-secondary));
+}
+
+@layer utilities {
+  .bg-grid-pattern {
+    background-size: 50px 50px;
+    background-image:
+      linear-gradient(to right, rgb(var(--border) / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--border) / 0.1) 1px, transparent 1px);
+  }
+}
