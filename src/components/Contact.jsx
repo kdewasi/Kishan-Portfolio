@@ -1,200 +1,267 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Mail, Phone, MapPin, Github, Linkedin, Loader2 } from 'lucide-react';
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane, FaGithub, FaLinkedin, FaInstagram, FaTwitter } from 'react-icons/fa';
+import emailjs from '@emailjs/browser';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const Contact = () => {
+    const formRef = useRef();
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+    });
+    const [status, setStatus] = useState('idle'); // idle, loading, success, error
+    const [errorMessage, setErrorMessage] = useState('');
 
-export default function Contact() {
-    const form = useRef();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [status, setStatus] = useState(null); // 'success' | 'error' | null
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-    const sendEmail = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true);
-        setStatus(null);
+        setStatus('loading');
+        setErrorMessage('');
 
-        const formData = new FormData(form.current);
-        const data = {
-            name: formData.get('user_name'),
-            email: formData.get('user_email'),
-            subject: formData.get('subject'),
-            message: formData.get('message')
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+        // Prepare template parameters matching your EmailJS template variables
+        const templateParams = {
+            from_name: formData.name,
+            from_email: formData.email,
+            subject: formData.subject,
+            message: formData.message,
         };
 
         try {
-            const response = await fetch(`${API_URL}/api/contact`, {
+            // 1. Send Email via EmailJS (Frontend)
+            await emailjs.send(serviceId, templateId, templateParams, publicKey);
+
+            // 2. Save Message to Database (Backend) - Optional but good for backup
+            // We don't await this or fail if it fails, ensuring the user sees "Success" if email sent
+            fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data)
-            });
+                body: JSON.stringify(formData),
+            }).catch(err => console.error("Failed to save to DB:", err));
 
-            const result = await response.json();
+            setStatus('success');
+            setFormData({ name: '', email: '', subject: '', message: '' });
 
-            if (result.success) {
-                setStatus('success');
-                form.current.reset();
-            } else {
-                setStatus('error');
-            }
+            // Reset status after 5 seconds
+            setTimeout(() => setStatus('idle'), 5000);
+
         } catch (error) {
-            console.error('Contact form error:', error);
+            console.error('EmailJS Error:', error);
             setStatus('error');
-        } finally {
-            setIsSubmitting(false);
+            setErrorMessage('Failed to send message. Please try again later.');
+            // Reset status after 5 seconds
+            setTimeout(() => setStatus('idle'), 5000);
         }
     };
 
     return (
         <section id="contact" className="py-20 relative">
-            <div className="container mx-auto px-4 md:px-6">
+            <div className="container mx-auto px-6 relative z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="grid md:grid-cols-2 gap-12"
+                    transition={{ duration: 0.5 }}
+                    className="text-center mb-16"
                 >
-                    {/* Contact Info */}
-                    <div>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-6">Let's <span className="text-primary">Connect</span></h2>
-                        <p className="text-text-secondary mb-8 text-lg">
-                            I'm currently seeking full-time opportunities. Check out my projects or just say hi!
-                            I'll get back to you within 24 hours.
-                        </p>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">Get In Touch</h2>
+                    <div className="w-20 h-1 bg-primary mx-auto rounded-full mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                        I'm currently open to new opportunities and collaborations. Whether you have a question or just want to say hi, I'll try my best to get back to you!
+                    </p>
+                </motion.div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                    {/* Contact Info */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                    >
+                        <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
                         <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-surface border border-border rounded-lg text-primary">
-                                    <Mail className="w-6 h-6" />
+                            <div className="flex items-start space-x-4">
+                                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                    <FaEnvelope size={20} />
                                 </div>
                                 <div>
-                                    <div className="text-sm text-text-secondary">Email</div>
-                                    <a href="mailto:kishandewasi606@gmail.com" className="font-medium hover:text-primary transition-colors">
+                                    <h4 className="font-semibold text-lg">Email</h4>
+                                    <a href="mailto:kishandewasi606@gmail.com" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
                                         kishandewasi606@gmail.com
                                     </a>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-surface border border-border rounded-lg text-primary">
-                                    <Phone className="w-6 h-6" />
+                            <div className="flex items-start space-x-4">
+                                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                    <FaMapMarkerAlt size={20} />
                                 </div>
                                 <div>
-                                    <div className="text-sm text-text-secondary">Phone</div>
-                                    <a href="tel:+14168349827" className="font-medium hover:text-primary transition-colors">
-                                        +1 (416) 834-9827
+                                    <h4 className="font-semibold text-lg">Location</h4>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        Toronto, Canada
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start space-x-4">
+                                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                    <FaGithub size={20} />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-lg">Github</h4>
+                                    <a href="https://github.com/kdewasi" target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                                        github.com/kdewasi
                                     </a>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-surface border border-border rounded-lg text-primary">
-                                    <MapPin className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <div className="text-sm text-text-secondary">Location</div>
-                                    <div className="font-medium">Toronto, Ontario, Canada</div>
-                                </div>
-                            </div>
                         </div>
 
-                        <div className="mt-12">
-                            <h3 className="text-lg font-bold mb-4">Connect on Socials</h3>
-                            <div className="flex gap-4">
-                                <a href="https://github.com/kishandewasi" target="_blank" rel="noopener noreferrer" className="p-3 bg-surface border border-border rounded-lg hover:text-primary hover:border-primary transition-colors">
-                                    <Github className="w-6 h-6" />
+                        <div className="mt-10">
+                            <h4 className="font-semibold text-lg mb-4">Follow Me</h4>
+                            <div className="flex space-x-4">
+                                <a href="https://github.com/kdewasi" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 dark:bg-dark-paper rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-primary hover:text-white transition-all transform hover:-translate-y-1">
+                                    <FaGithub size={18} />
                                 </a>
-                                <a href="https://linkedin.com/in/kishandewasi" target="_blank" rel="noopener noreferrer" className="p-3 bg-surface border border-border rounded-lg hover:text-primary hover:border-primary transition-colors">
-                                    <Linkedin className="w-6 h-6" />
+                                <a href="https://www.linkedin.com/in/kishan-dewasi-09724b251/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 dark:bg-dark-paper rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-primary hover:text-white transition-all transform hover:-translate-y-1">
+                                    <FaLinkedin size={18} />
+                                </a>
+                                <a href="https://www.instagram.com/kishan_dewasi_900/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-100 dark:bg-dark-paper rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-primary hover:text-white transition-all transform hover:-translate-y-1">
+                                    <FaInstagram size={18} />
                                 </a>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Contact Form */}
-                    <div className="bg-surface border border-border rounded-2xl p-8">
-                        <h3 className="text-2xl font-bold mb-6">Send a Message</h3>
-                        <form ref={form} onSubmit={sendEmail} className="space-y-4">
-                            <div className="grid md:grid-cols-2 gap-4">
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        className="bg-white dark:bg-dark-paper p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800"
+                    >
+                        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="user_name" className="text-sm font-medium">Name</label>
+                                    <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Your Name
+                                    </label>
                                     <input
                                         type="text"
-                                        name="user_name"
-                                        id="user_name"
+                                        id="name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                                        placeholder="Your name"
+                                        className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                        placeholder="John Doe"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="user_email" className="text-sm font-medium">Email</label>
+                                    <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Your Email
+                                    </label>
                                     <input
                                         type="email"
-                                        name="user_email"
-                                        id="user_email"
+                                        id="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                                        placeholder="your@email.com"
+                                        className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                        placeholder="john@example.com"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="subject" className="text-sm font-medium">Subject</label>
+                                <label htmlFor="subject" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Subject
+                                </label>
                                 <input
                                     type="text"
-                                    name="subject"
                                     id="subject"
-                                    className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                                    placeholder="Project inquiry"
+                                    name="subject"
+                                    value={formData.subject}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                    placeholder="Project Inquiry"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="message" className="text-sm font-medium">Message</label>
+                                <label htmlFor="message" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Message
+                                </label>
                                 <textarea
-                                    name="message"
                                     id="message"
+                                    name="message"
+                                    value={formData.message}
+                                    onChange={handleChange}
                                     required
                                     rows="5"
-                                    className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+                                    className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
                                     placeholder="Tell me about your project..."
-                                ></textarea>
+                                />
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={isSubmitting}
-                                className="w-full py-4 bg-primary text-white rounded-lg font-bold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                disabled={status === 'loading'}
+                                className={`w-full py-4 rounded-lg font-semibold text-white transition-all transform hover:-translate-y-1 flex items-center justify-center space-x-2 ${status === 'loading'
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25'
+                                    }`}
                             >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" /> Sending...
-                                    </>
+                                {status === 'loading' ? (
+                                    <span>Sending...</span>
                                 ) : (
                                     <>
-                                        Send Message <Send className="w-5 h-5" />
+                                        <FaPaperPlane />
+                                        <span>Send Message</span>
                                     </>
                                 )}
                             </button>
 
                             {status === 'success' && (
-                                <div className="p-4 bg-green-500/10 border border-green-500/20 text-green-500 rounded-lg text-sm text-center">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-4 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-center font-medium"
+                                >
                                     Message sent successfully! I'll get back to you soon.
-                                </div>
+                                </motion.div>
                             )}
+
                             {status === 'error' && (
-                                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm text-center">
-                                    Something went wrong. Please try again or email me directly.
-                                </div>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-4 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-center font-medium"
+                                >
+                                    {errorMessage}
+                                </motion.div>
                             )}
                         </form>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         </section>
     );
-}
+};
+
+export default Contact;

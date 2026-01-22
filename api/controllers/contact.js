@@ -24,11 +24,13 @@ export const submitContact = async (req, res) => {
             userAgent: req.get('User-Agent')
         });
 
-        try {
-            await sendContactEmail({ name, email, subject, message });
-        } catch (emailError) {
-            console.error('Email sending failed:', emailError.message);
-        }
+        // 3. (DISABLED due to Render Blocks) Send Email Notification
+        // try {
+        //   await sendContactEmail(newMessage);
+        // } catch (emailError) {
+        //   console.error('Email sending failed (Internal):', emailError);
+        //   // Continue execution - don't fail the request if email fails, since we have it in DB
+        // }
 
         res.status(201).json({
             success: true,
