@@ -12,6 +12,8 @@ const createTransporter = () => {
     host: process.env.EMAIL_HOST,
     port: port,
     secure: isSecure,
+    logger: true, // Log to console
+    debug: true,  // Include SMTP traffic in logs
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
