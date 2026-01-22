@@ -61,6 +61,10 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
+// Debug route (Temporary)
+import debugRoutes from './routes/debug.js';
+app.use('/api/debug', debugRoutes);
+
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({
