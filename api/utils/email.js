@@ -2,22 +2,17 @@ import nodemailer from 'nodemailer';
 
 // Create transporter
 const createTransporter = () => {
-  const port = process.env.EMAIL_PORT || 587;
-  // Port 465 requires secure: true, 587 requires secure: false
-  const isSecure = port == 465;
-
-  console.log(`📧 [Email Service] Config - Port: ${port}, Secure: ${isSecure}`);
+  console.log(`📧 [Email Service] Config - Using Service: Gmail`);
 
   return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: port,
-    secure: isSecure,
-    logger: true, // Log to console
-    debug: true,  // Include SMTP traffic in logs
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
-    }
+    },
+    logger: true,
+    debug: true,
+    connectionTimeout: 10000 // Fail after 10 seconds instead of 2 minutes
   });
 };
 
