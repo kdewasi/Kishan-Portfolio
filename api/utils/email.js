@@ -139,7 +139,17 @@ const generateEmailTemplate = (data) => {
 
 // Send email notification
 export const sendContactEmail = async (messageData) => {
+  console.log('📧 [Email Service] Initializing transporter...');
   const transporter = createTransporter();
+
+  // Verify connection configuration
+  try {
+    await transporter.verify();
+    console.log('✅ [Email Service] Transporter configuration is correct');
+  } catch (error) {
+    console.error('❌ [Email Service] Transporter verification failed:', error);
+    throw error;
+  }
 
   const timestamp = new Date().toLocaleString('en-US', {
     weekday: 'long',
@@ -164,5 +174,17 @@ export const sendContactEmail = async (messageData) => {
     replyTo: messageData.email
   };
 
-  return transporter.sendMail(mailOptions);
+  console.log(`📧 [Email Service] Attempting to send email to ${process.env.EMAIL_TO}...`);
+  console.log(`📧 [Email Service] Using Host: ${process.env.EMAIL_HOST}, Port: ${process.env.EMAIL_PORT}, User: ${process.env.EMAIL_USER}`);
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ [Email Service] Email sent successfully!');
+    console.log('📝 [Email Service] Message ID:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ [Email Service] Send failed:', error);
+    console.error('❌ [Email Service] Error details:', JSON.stringify(error, null, 2));
+    throw error;
+  }
 };
